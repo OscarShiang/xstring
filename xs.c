@@ -147,7 +147,7 @@ xs *xs_trim(xs *x, const char *trimset)
     char *dataptr = xs_data(x), *orig = dataptr;
 
     /* similar to strspn/strpbrk but it operates on binary data */
-    uint8_t mask[8] = {0};
+    uint8_t mask[32] = {0};
 
 #define check_bit(byte) (mask[(uint8_t) byte / 8] & 1 << (uint8_t) byte % 8)
 #define set_bit(byte) (mask[(uint8_t) byte / 8] |= 1 << (uint8_t) byte % 8)
