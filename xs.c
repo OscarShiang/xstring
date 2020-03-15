@@ -126,6 +126,7 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
         memcpy(data + pres + size, suf, sufs + 1);
         string->space_left = 15 - (size + pres + sufs);
     } else {
+	/*
         xs tmps = xs_literal_empty();
         xs_grow(&tmps, size + pres + sufs);
         char *tmpdata = xs_data(&tmps);
@@ -134,7 +135,13 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
         memcpy(tmpdata + pres + size, suf, sufs + 1);
         xs_free(string);
         *string = tmps;
-        string->size = size + pres + sufs;
+        */
+	xs_grow(string, size + pres + sufs);
+        data = xs_data(string);
+	memmove(data + pres, data, size);
+	memcpy(data, pre, pres);
+	memcpy(data + pres + size, suf, sufs + 1);
+	string->size = size + pres + sufs;
     }
     return string;
 }
@@ -191,7 +198,7 @@ int main()
     xs_trim(&string, "\n ");
     printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
 
-    xs prefix = *xs_tmp("((("), suffix = *xs_tmp(")))");
+    xs prefix = *xs_tmp("((("), suffix = *xs_tmp("))) hello word");
     xs_concat(&string, &prefix, &suffix);
     printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
 
