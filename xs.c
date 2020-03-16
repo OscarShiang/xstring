@@ -181,6 +181,24 @@ xs *xs_trim(xs *x, const char *trimset)
 #undef set_bit
 }
 
+xs *xs_copy(xs *dst, xs *src)
+{
+    if (xs_is_ptr(dst))
+	*dst = *xs_free(dst);
+    if (xs_size(src) <= 16) {
+	memcpy(dst, src, xs_size(src));
+	dst->is_ptr = 0;
+	dst->space_left = src->space_left;
+    }
+    else {
+	dst->ptr = src->ptr;
+	dst->is_ptr = 1;
+	dst->size = xs_size(src);
+	dst->flag1 = 1; // indicate that the string is just a reference
+    }
+    return dst;
+}
+
 #include <stdio.h>
 #define autofree __attribute__((cleanup(xs_free)))
 
