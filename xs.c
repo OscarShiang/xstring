@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 typedef union {
     /* allow strings up to 15 bytes to stay on the stack
@@ -126,16 +127,6 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
         memcpy(data + pres + size, suf, sufs + 1);
         string->space_left = 15 - (size + pres + sufs);
     } else {
-	/*
-        xs tmps = xs_literal_empty();
-        xs_grow(&tmps, size + pres + sufs);
-        char *tmpdata = xs_data(&tmps);
-        memcpy(tmpdata + pres, data, size);
-        memcpy(tmpdata, pre, pres);
-        memcpy(tmpdata + pres + size, suf, sufs + 1);
-        xs_free(string);
-        *string = tmps;
-        */
 	xs_grow(string, size + pres + sufs);
         data = xs_data(string);
 	memmove(data + pres, data, size);
@@ -191,10 +182,11 @@ xs *xs_trim(xs *x, const char *trimset)
 }
 
 #include <stdio.h>
+#define autofree __attribute__((cleanup(xs_free)))
 
 int main()
 {
-    xs string = *xs_tmp("\n foobarbar \n\n\n");
+    autofree xs string = *xs_tmp("\n foobarbar \n\n\n");
     xs_trim(&string, "\n ");
     printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
 
