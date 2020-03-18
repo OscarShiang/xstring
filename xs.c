@@ -35,6 +35,7 @@ typedef union {
 } xs;
 
 static inline bool xs_is_ptr(const xs *x) { return x->is_ptr; }
+static inline bool xs_is_ref(const xs *x) { return x->flag1; }
 static inline size_t xs_size(const xs *x)
 {
     return xs_is_ptr(x) ? x->size : 15 - x->space_left;
@@ -106,6 +107,18 @@ static inline xs *xs_newempty(xs *x)
     return x;
 }
 
+static xs *xs_duplicate(xs *dst) 
+{
+    int len = xs_size(dst);
+    char *srcptr = xs_data(dst);
+
+    *dst = *xs_newempty(dst);
+    char *dataptr = xs_data(dst);
+
+    memcpy(dataptr, srcptr, len);
+    return dst;
+}
+
 static inline xs *xs_free(xs *x)
 {
     if (xs_is_ptr(x))
@@ -120,6 +133,9 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
 
     char *pre = xs_data(prefix), *suf = xs_data(suffix),
          *data = xs_data(string);
+
+    if (xs_is_ref(string))
+	*string = *xs_duplicate(string);
 
     if (size + pres + sufs <= capacity) {
         memmove(data + pres, data, size);
@@ -141,6 +157,9 @@ xs *xs_trim(xs *x, const char *trimset)
 {
     if (!trimset[0])
         return x;
+
+    if (xs_is_ref(x))
+	*x = *xs_duplicate(x);
 
     char *dataptr = xs_data(x), *orig = dataptr;
 
