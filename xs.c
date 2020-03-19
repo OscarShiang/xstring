@@ -223,13 +223,13 @@ char *xs_tok(xs *str, const char *sep, char **last)
     size_t i, len = strlen(dataptr), seplen = strlen(sep);
     for (i = 0; i < seplen; i++)
         set_bit(sep[i]);
-    for (i = 0; i < len; i++) {
-        if (check_bit(*(dataptr + i))) {
-            *(dataptr + i) = '\0';
-            break;
-        }
+    for (*last = dataptr; **last; ++(*last)) {
+	if (check_bit(**last)) {
+	    **last = '\0';
+	    ++(*last);
+	    break;
+	}
     }
-    *last = dataptr + i + 1;
     return dataptr;
 #undef check_bit
 #undef set_bit
