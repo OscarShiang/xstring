@@ -207,14 +207,15 @@ xs *xs_trim(xs *x, const char *trimset)
     return x;
 }
 
-char *xs_tok(xs *str, const char *sep)
+char *xs_tok(xs *str, const char *sep, char **last)
 {
-    static char *dataptr;
+    char *dataptr;
     if (str) {
         if (xs_is_ref(str))
             *str = *xs_dup(str);
         dataptr = xs_data(str);
-    }
+    } else 
+	dataptr = *last;
     if (!*dataptr)
         return NULL;
 
@@ -228,9 +229,8 @@ char *xs_tok(xs *str, const char *sep)
             break;
         }
     }
-    char *ptr = dataptr;
-    dataptr += i + 1;
-    return ptr;
+    *last = dataptr + i + 1;
+    return dataptr;
 #undef check_bit
 #undef set_bit
 }
@@ -266,11 +266,11 @@ int main()
     xs_concat(&string, &prefix, &suffix);
     printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
     */
-    char *sep = " -";
-    char *delim = xs_tok(&string, sep);
+    char *sep = " -", *last = NULL;
+    char *delim = xs_tok(&string, sep, &last);
     while (delim != NULL) {
         printf("%s\n", delim);
-        delim = xs_tok(NULL, sep);
+        delim = xs_tok(NULL, sep, &last);
     }
 
     return 0;
