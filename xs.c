@@ -1,9 +1,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 typedef union {
     /* allow strings up to 15 bytes to stay on the stack
@@ -34,8 +34,14 @@ typedef union {
     };
 } xs;
 
-static inline bool xs_is_ptr(const xs *x) { return x->is_ptr; }
-static inline bool xs_is_ref(const xs *x) { return x->flag1; }
+static inline bool xs_is_ptr(const xs *x)
+{
+    return x->is_ptr;
+}
+static inline bool xs_is_ref(const xs *x)
+{
+    return x->flag1;
+}
 static inline size_t xs_size(const xs *x)
 {
     return xs_is_ptr(x) ? x->size : 15 - x->space_left;
@@ -52,7 +58,10 @@ static inline size_t xs_capacity(const xs *x)
 #define xs_literal_empty() \
     (xs) { .space_left = 15 }
 
-static inline int ilog2(uint32_t n) { return 32 - __builtin_clz(n) - 1; }
+static inline int ilog2(uint32_t n)
+{
+    return 32 - __builtin_clz(n) - 1;
+}
 
 xs *xs_new(xs *x, const void *p)
 {
@@ -107,7 +116,7 @@ static inline xs *xs_newempty(xs *x)
     return x;
 }
 
-static xs *xs_dup(xs *dst) 
+static xs *xs_dup(xs *dst)
 {
     int len = xs_size(dst);
     char *srcptr = xs_data(dst);
@@ -135,7 +144,7 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
          *data = xs_data(string);
 
     if (xs_is_ref(string))
-	*string = *xs_dup(string);
+        *string = *xs_dup(string);
 
     if (size + pres + sufs <= capacity) {
         memmove(data + pres, data, size);
@@ -143,12 +152,12 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
         memcpy(data + pres + size, suf, sufs + 1);
         string->space_left = 15 - (size + pres + sufs);
     } else {
-	xs_grow(string, size + pres + sufs);
+        xs_grow(string, size + pres + sufs);
         data = xs_data(string);
-	memmove(data + pres, data, size);
-	memcpy(data, pre, pres);
-	memcpy(data + pres + size, suf, sufs + 1);
-	string->size = size + pres + sufs;
+        memmove(data + pres, data, size);
+        memcpy(data, pre, pres);
+        memcpy(data + pres + size, suf, sufs + 1);
+        string->size = size + pres + sufs;
     }
     return string;
 }
@@ -159,7 +168,7 @@ xs *xs_trim(xs *x, const char *trimset)
         return x;
 
     if (xs_is_ref(x))
-	*x = *xs_dup(x);
+        *x = *xs_dup(x);
 
     char *dataptr = xs_data(x), *orig = dataptr;
 
@@ -202,26 +211,26 @@ char *xs_tok(xs *str, const char *sep)
 {
     static char *dataptr;
     if (str) {
-	if (xs_is_ref(str))
-	    *str = *xs_dup(str);
-	dataptr = xs_data(str);
+        if (xs_is_ref(str))
+            *str = *xs_dup(str);
+        dataptr = xs_data(str);
     }
     if (!*dataptr)
-	return NULL;
-    
+        return NULL;
+
     uint8_t mask[32] = {0};
     size_t i, len = strlen(dataptr), seplen = strlen(sep);
     for (i = 0; i < seplen; i++)
-	set_bit(sep[i]);
+        set_bit(sep[i]);
     for (i = 0; i < len; i++) {
-	if (check_bit(*(dataptr + i))) {
-	    *(dataptr + i) = '\0';
-	    break;
+        if (check_bit(*(dataptr + i))) {
+            *(dataptr + i) = '\0';
+            break;
         }
     }
-	char *ptr = dataptr;
-	dataptr += i + 1;
-	return ptr;
+    char *ptr = dataptr;
+    dataptr += i + 1;
+    return ptr;
 #undef check_bit
 #undef set_bit
 }
@@ -229,17 +238,16 @@ char *xs_tok(xs *str, const char *sep)
 xs *xs_copy(xs *dst, xs *src)
 {
     if (xs_is_ptr(dst))
-	*dst = *xs_free(dst);
+        *dst = *xs_free(dst);
     if (xs_size(src) <= 16) {
-	memcpy(dst, src, xs_size(src));
-	dst->is_ptr = 0;
-	dst->space_left = src->space_left;
-    }
-    else {
-	dst->ptr = src->ptr;
-	dst->is_ptr = 1;
-	dst->size = xs_size(src);
-	dst->flag1 = 1; // indicate that the string is just a reference
+        memcpy(dst, src, xs_size(src));
+        dst->is_ptr = 0;
+        dst->space_left = src->space_left;
+    } else {
+        dst->ptr = src->ptr;
+        dst->is_ptr = 1;
+        dst->size = xs_size(src);
+        dst->flag1 = 1;  // indicate that the string is just a reference
     }
     return dst;
 }
@@ -261,8 +269,8 @@ int main()
     char *sep = " -";
     char *delim = xs_tok(&string, sep);
     while (delim != NULL) {
-	printf("%s\n", delim);
-	delim = xs_tok(NULL, sep);
+        printf("%s\n", delim);
+        delim = xs_tok(NULL, sep);
     }
 
     return 0;
