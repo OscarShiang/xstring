@@ -107,7 +107,7 @@ static inline xs *xs_newempty(xs *x)
     return x;
 }
 
-static xs *xs_duplicate(xs *dst) 
+static xs *xs_dup(xs *dst) 
 {
     int len = xs_size(dst);
     char *srcptr = xs_data(dst);
@@ -135,7 +135,7 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
          *data = xs_data(string);
 
     if (xs_is_ref(string))
-	*string = *xs_duplicate(string);
+	*string = *xs_dup(string);
 
     if (size + pres + sufs <= capacity) {
         memmove(data + pres, data, size);
@@ -159,7 +159,7 @@ xs *xs_trim(xs *x, const char *trimset)
         return x;
 
     if (xs_is_ref(x))
-	*x = *xs_duplicate(x);
+	*x = *xs_dup(x);
 
     char *dataptr = xs_data(x), *orig = dataptr;
 
@@ -203,7 +203,7 @@ char *xs_tok(xs *str, const char *sep)
     static char *dataptr;
     if (str) {
 	if (xs_is_ref(str))
-	    *str = *xs_duplicate(str);
+	    *str = *xs_dup(str);
 	dataptr = xs_data(str);
     }
     if (!*dataptr)
