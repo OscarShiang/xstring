@@ -196,6 +196,32 @@ xs *xs_trim(xs *x, const char *trimset)
     else
         x->space_left = 15 - slen;
     return x;
+}
+
+char *xs_tok(xs *str, const char *sep)
+{
+    static char *dataptr;
+    if (str) {
+	if (xs_is_ref(str))
+	    *str = *xs_duplicate(str);
+	dataptr = xs_data(str);
+    }
+    if (!*dataptr)
+	return NULL;
+    
+    uint8_t mask[32] = {0};
+    size_t i, len = strlen(dataptr), seplen = strlen(sep);
+    for (i = 0; i < seplen; i++)
+	set_bit(sep[i]);
+    for (i = 0; i < len; i++) {
+	if (check_bit(*(dataptr + i))) {
+	    *(dataptr + i) = '\0';
+	    break;
+        }
+    }
+	char *ptr = dataptr;
+	dataptr += i + 1;
+	return ptr;
 #undef check_bit
 #undef set_bit
 }
@@ -223,13 +249,21 @@ xs *xs_copy(xs *dst, xs *src)
 
 int main()
 {
-    autofree xs string = *xs_tmp("\n foobarbar \n\n\n");
+    autofree xs string = *xs_tmp("the-is-a-test");
+    /*
     xs_trim(&string, "\n ");
     printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
 
     xs prefix = *xs_tmp("((("), suffix = *xs_tmp("))) hello word");
     xs_concat(&string, &prefix, &suffix);
     printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
+    */
+    char *sep = " -";
+    char *delim = xs_tok(&string, sep);
+    while (delim != NULL) {
+	printf("%s\n", delim);
+	delim = xs_tok(NULL, sep);
+    }
 
     return 0;
 }
